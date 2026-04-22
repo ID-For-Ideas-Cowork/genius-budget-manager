@@ -49,6 +49,7 @@ class CampaignControllerTest {
                 .andExpect(jsonPath("$.client").value("SuenoSimple"))
                 .andExpect(jsonPath("$.totalBudget").value(120000.0))
                 .andExpect(jsonPath("$.spent").value(67800.0))
+                .andExpect(jsonPath("$.remaining").value(120000.0 - 67800.0)) // se agregó validación de remaining
                 .andExpect(jsonPath("$.percentageUsed").exists());
     }
 

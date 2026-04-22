@@ -22,7 +22,7 @@ public class CampaignService {
 
     public List<Campaign> getCampaignsByStatus(String status) {
         return repository.findAll().stream()
-                .filter(c -> c.getType().equalsIgnoreCase(status))
+                .filter(c -> c.getStatus().equalsIgnoreCase(status)) // se corrigió c.getType() por c.getStatus()
                 .collect(Collectors.toList());
     }
 
@@ -40,21 +40,31 @@ public class CampaignService {
         summary.setClient(campaign.getClient());
         summary.setTotalBudget(campaign.getBudget());
         summary.setSpent(campaign.getSpent());
-        summary.setRemaining(campaign.getBudget() - campaign.getBudget());
+        summary.setRemaining(campaign.getBudget() - campaign.getSpent()); // se corrigió campaign.getBudget() por campaign.getSpent()
         summary.setPercentageUsed(
-                Math.round((campaign.getSpent() / campaign.getBudget()) * 10000.0) / 100.0
+                campaign.getBudget() != null && campaign.getBudget() > 0 // se agrega operador ternairo para validar presupuesto
+                        ? Math.round((campaign.getSpent() / campaign.getBudget()) * 10000.0) / 100.0
+                        : 0.0
         );
-
         return summary;
     }
 
     public List<Expense> getExpensesByCampaign(Long campaignId) {
-        getCampaignById(campaignId);
         return repository.findExpensesByCampaignId(campaignId);
     }
 
     public Expense addExpense(Long campaignId, Expense expense) {
         Campaign campaign = getCampaignById(campaignId);
+        if (expense.getCategory() == null) {
+            throw new IllegalArgumentException("Category is required");
+        }
+        List<String> validCategories = List.of("ads_spend", "creative", "tools", "agency_fee");
+        if (!validCategories.contains(expense.getCategory())) {
+            throw new IllegalArgumentException("Invalid category: " + expense.getCategory());
+        }
+        if (expense.getAmount() == null || expense.getAmount() <= 0) {
+            throw new IllegalArgumentException("Amount is required");
+        }
         expense.setCampaignId(campaignId);
         campaign.setSpent(campaign.getSpent() + expense.getAmount());
         return repository.saveExpense(expense);
@@ -62,7 +72,6 @@ public class CampaignService {
 
     public Campaign updateBudget(Long campaignId, Double newBudget) {
         Campaign campaign = getCampaignById(campaignId);
-        campaign.setSpent(0.0);
         campaign.setBudget(newBudget);
         return campaign;
     }
