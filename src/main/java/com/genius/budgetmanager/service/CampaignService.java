@@ -75,4 +75,21 @@ public class CampaignService {
         campaign.setBudget(newBudget);
         return campaign;
     }
+
+    public Campaign addCampaign(Campaign campaign) {
+         if(campaign.getName()==null || campaign.getName().isBlank()){
+             throw new IllegalArgumentException("Name is required");
+         };
+        if(campaign.getClient()==null || campaign.getClient().isBlank()){
+            throw new IllegalArgumentException("Client is required");
+        };
+        if(campaign.getType()==null || campaign.getType().isBlank()){
+            throw new IllegalArgumentException("Type is required");
+        };
+        List<String> validStatus = List.of("active", "paused", "closed", "draft");
+        if (!validStatus.contains(campaign.getStatus())) {
+            throw new IllegalArgumentException("Invalid status: " + campaign.getStatus());
+        }
+        return repository.saveCampaign(campaign);
+    }
 }

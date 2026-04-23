@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/campaigns")
@@ -59,5 +60,17 @@ public class CampaignController {
     @Operation(summary = "Actualizar presupuesto de la campana")
     public ResponseEntity<Campaign> updateBudget(@PathVariable Long id, @RequestBody BudgetUpdateRequest request) {
         return ResponseEntity.ok(campaignService.updateBudget(id, request.getBudget()));
+    }
+
+    @PostMapping("/campaign")
+    @Operation(summary = "Registrar nueva campana", description = "Guarda nueva campaña")
+    public ResponseEntity<?> addCampaign(@RequestBody Campaign campaign) {
+        try {
+            return ResponseEntity.ok(campaignService.addCampaign(campaign));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("Error", ex.getMessage()));
+        }
     }
 }

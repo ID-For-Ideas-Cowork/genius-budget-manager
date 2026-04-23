@@ -15,6 +15,8 @@ public class CampaignRepository {
     private final List<Campaign> campaigns = new ArrayList<>();
     private final List<Expense> expenses = new ArrayList<>();
     private long nextExpenseId = 11;
+    private long nextCampaignId = 7;
+
 
     public CampaignRepository() {
         loadData();
@@ -64,5 +66,11 @@ public class CampaignRepository {
         expense.setId(nextExpenseId++);
         expenses.add(expense);
         return expense;
+    }
+
+    public Campaign saveCampaign(Campaign campaign) {
+        campaign.setId(nextCampaignId++);
+        campaigns.add(campaign);
+        return campaign;
     }
 }
