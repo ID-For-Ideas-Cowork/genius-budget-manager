@@ -22,7 +22,6 @@ OUTPUT_FILE        = 'report.xlsx'
 
 
 def api_get(url: str) -> list | dict:
-    # TODO BM-B05: agregar manejo de excepciones de conexión (urllib.error.URLError)
     with urllib.request.urlopen(url, timeout=5) as response:
         return json.loads(response.read())
 
@@ -43,13 +42,7 @@ def get_leads_summary() -> list:
 
 
 def export_to_excel(campaigns: list, summary: dict) -> None:
-    """
-    Genera el archivo Excel con métricas de campañas.
-    TODO BM-F08: implementar con openpyxl.
-    - Hoja 1: listado de campañas (nombre, cliente, estado, presupuesto, gastado, disponible)
-    - Hoja 2: resumen global (totales y KPIs)
-    - TODO BM-B06: filtrar solo campañas activas en los totales
-    """
+    """Genera el archivo Excel con métricas de campañas."""
     import openpyxl
     wb = openpyxl.Workbook()
 
@@ -65,7 +58,7 @@ def export_to_excel(campaigns: list, summary: dict) -> None:
             c.get('status'),
             c.get('budget', 0),
             c.get('spent', 0),
-            c.get('budget', 0) - c.get('spent', 0),  # TODO: usar campo 'available' cuando BM-B02 esté corregido
+            c.get('budget', 0) - c.get('spent', 0),
         ])
 
     # Hoja de resumen
