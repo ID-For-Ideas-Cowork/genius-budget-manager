@@ -4,6 +4,7 @@ import com.genius.budgetmanager.model.BudgetSummary;
 import com.genius.budgetmanager.model.BudgetUpdateRequest;
 import com.genius.budgetmanager.model.Campaign;
 import com.genius.budgetmanager.model.Expense;
+import com.genius.budgetmanager.model.GlobalBudgetSummary;
 import com.genius.budgetmanager.service.CampaignService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,12 @@ public class CampaignController {
             return ResponseEntity.ok(campaignService.getCampaignsByStatus(status));
         }
         return ResponseEntity.ok(campaignService.getAllCampaigns());
+    }
+
+    @GetMapping("/summary")
+    @Operation(summary = "Resumen global de presupuesto", description = "Agrega KPIs de todas las campanas activas: total asignado, gastado, disponible y porcentaje de consumo.")
+    public ResponseEntity<GlobalBudgetSummary> getGlobalBudgetSummary() {
+        return ResponseEntity.ok(campaignService.getGlobalBudgetSummary());
     }
 
     @GetMapping("/{id}")

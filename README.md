@@ -81,6 +81,7 @@ La colección también puede importarse en Postman usando la especificación Ope
 |--------|------|-------------|
 | GET | `/api/campaigns` | Listar todas las campañas |
 | GET | `/api/campaigns?status={status}` | Filtrar campañas por estado |
+| GET | `/api/campaigns/summary` | KPIs globales de campañas activas |
 | GET | `/api/campaigns/{id}` | Obtener campaña por ID |
 | GET | `/api/campaigns/{id}/summary` | Resumen de presupuesto |
 | GET | `/api/campaigns/{id}/expenses` | Listar gastos de la campaña |
@@ -109,13 +110,98 @@ Campañas disponibles:
 ## Estructura del proyecto
 
 ```
-src/main/java/com/genius/budgetmanager/
-├── controller/     Endpoints HTTP
-├── service/        Lógica de negocio
-├── model/          Entidades y DTOs
-├── repository/     Datos en memoria
-└── exception/      Manejo global de errores
+budget-manager/
+├── src/main/java/com/genius/budgetmanager/
+│   ├── controller/     Endpoints HTTP
+│   ├── service/        Lógica de negocio
+│   ├── model/          Entidades y DTOs
+│   ├── repository/     Datos en memoria
+│   └── exception/      Manejo global de errores
+├── reporting/
+│   ├── extract.py      Script Python: extrae datos de las APIs y genera report.xlsx
+│   └── requirements.txt  Dependencias Python (openpyxl, requests)
+├── requerimientos.html   Solo para el coordinador
+└── pom.xml
 ```
+
+## Módulo de reportería (Python)
+
+La carpeta `reporting/` contiene un script Python que extrae datos de las APIs internas y genera un archivo Excel para análisis y Power BI. El código Java no requiere cambios para usarlo (salvo el endpoint BM-F06 pendiente).
+
+### Dependencias externas
+
+| Servicio | Puerto | Para qué se usa |
+|---|---|---|
+| Budget Manager | 8080 | Campañas y resumen de presupuesto |
+| Landing CRM | 3000 | Resumen de leads por landing |
+
+### Requisitos
+
+- Python 3.10 o superior
+- Instalar dependencias:
+  ```bash
+  pip install -r reporting/requirements.txt
+  ```
+
+### Cómo ejecutar
+
+```bash
+python reporting/extract.py
+```
+
+Con el servidor corriendo en `http://localhost:8080`, el script genera `report.xlsx` en la carpeta `reporting/` con dos hojas:
+
+| Hoja | Contenido |
+|------|-----------|
+| Campañas | Una fila por campaña: nombre, cliente, estado, presupuesto, gastado, disponible |
+| Resumen | KPIs globales: campañas activas, presupuesto total, gastado, disponible, % consumo |
+
+### Conexión con Power BI
+
+Una vez generado `report.xlsx`, importarlo en Power BI Desktop como origen de datos Excel. El dashboard (`dashboard.pbix`) se actualiza apuntando al archivo generado. Ver requerimiento BM-F09 en `requerimientos.html` para el detalle completo.
+
+### Flujo de trabajo — Rol Data Analytics
+
+El módulo de reportería es el punto de entrada para el trabajo de análisis. El flujo completo es:
+
+```
+python reporting/extract.py
+        ↓
+  reporting/report.xlsx
+        ↓
+  Excel (análisis)      →  Power BI Desktop (dashboard.pbix)
+```
+
+**Paso 1 — Generar los datos**
+
+```bash
+python reporting/extract.py
+```
+
+Requiere Budget Manager corriendo en `http://localhost:8080`. Genera `reporting/report.xlsx` con las campañas y el resumen global.
+
+**Paso 2 — Análisis en Excel**
+
+Abrir `reporting/report.xlsx`. El archivo contiene los datos crudos. Las tareas del analista incluyen formatear el reporte, crear tablas dinámicas, gráficos y fórmulas de análisis. Ver tareas DA-F01 a DA-F05 en `requerimientos.html`.
+
+Requisito: Microsoft Excel 2016 o superior (o LibreOffice Calc).
+
+**Paso 3 — Dashboard Power BI**
+
+Abrir `reporting/dashboard.pbix` en Power BI Desktop y actualizar el origen de datos apuntando a `report.xlsx`. Ver tareas DA-F06 y DA-F07 en `requerimientos.html`.
+
+Requisito: Power BI Desktop (descarga gratuita en microsoft.com/power-bi).
+
+**Archivos del módulo**
+
+| Archivo | Descripción |
+|---------|-------------|
+| `reporting/extract.py` | Script Python que genera el Excel |
+| `reporting/requirements.txt` | Dependencias Python |
+| `reporting/report.xlsx` | Reporte generado — no se versiona, se regenera con el script |
+| `reporting/dashboard.pbix` | Dashboard Power BI — pendiente (DA-F06) |
+
+---
 
 ## Cómo trabajar en este repositorio
 
