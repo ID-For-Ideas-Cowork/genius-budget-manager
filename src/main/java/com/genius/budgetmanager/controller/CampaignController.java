@@ -24,14 +24,19 @@ public class CampaignController {
     private CampaignService campaignService;
 
     @GetMapping
-    @Operation(summary = "Listar campanas", description = "Retorna todas las campanas. Acepta filtro opcional por status.")
-    public ResponseEntity<List<Campaign>> getCampaigns(@RequestParam(required = false) String status) {
-        if (status != null && !status.isBlank()) {
-            return ResponseEntity.ok(campaignService.getCampaignsByStatus(status));
-        }
-        return ResponseEntity.ok(campaignService.getAllCampaigns());
+    @Operation(summary = "Listar campanas", description = "Retorna todas las campanas. Acepta filtros opcionales por status y client.")
+    public ResponseEntity<List<Campaign>> getCampaigns(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String client) {
+        return ResponseEntity.ok(campaignService.searchCampaigns(status, client));
     }
 
+    @PostMapping
+    @Operation(summary = "Crear una campana")
+    public ResponseEntity<Campaign> createCampaign(@RequestBody Campaign campaign) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(campaignService.createCampaign(campaign));
+    }
+    
     @GetMapping("/summary")
     @Operation(summary = "Resumen global de presupuesto", description = "Agrega KPIs de todas las campanas activas: total asignado, gastado, disponible y porcentaje de consumo.")
     public ResponseEntity<GlobalBudgetSummary> getGlobalBudgetSummary() {

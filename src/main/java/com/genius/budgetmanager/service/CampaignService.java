@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class CampaignService {
@@ -20,10 +22,17 @@ public class CampaignService {
     public List<Campaign> getAllCampaigns() {
         return repository.findAll();
     }
-
+    
+    public List<Campaign> searchCampaigns(String status, String client) {
+        return repository.findAll().stream()
+                .filter(c -> status == null || status.isBlank() || c.getStatus().equalsIgnoreCase(status))
+                .filter(c -> client == null || client.isBlank() || c.getClient().equalsIgnoreCase(client))
+                .collect(Collectors.toList());
+    }
+    
     public List<Campaign> getCampaignsByStatus(String status) {
         return repository.findAll().stream()
-                .filter(c -> c.getType().equalsIgnoreCase(status))
+                .filter(c -> c.getStatus().equalsIgnoreCase(status))
                 .collect(Collectors.toList());
     }
 
@@ -41,7 +50,7 @@ public class CampaignService {
         summary.setClient(campaign.getClient());
         summary.setTotalBudget(campaign.getBudget());
         summary.setSpent(campaign.getSpent());
-        summary.setRemaining(campaign.getBudget() - campaign.getBudget());
+        summary.setRemaining(campaign.getBudget() - campaign.getSpent());
         summary.setPercentageUsed(
                 Math.round((campaign.getSpent() / campaign.getBudget()) * 10000.0) / 100.0
         );
@@ -87,5 +96,20 @@ public class CampaignService {
         campaign.setSpent(0.0);
         campaign.setBudget(newBudget);
         return campaign;
+    }
+    
+    public Campaign createCampaign(Campaign campaign) {
+        if (campaign.getName() == null || campaign.getName().isBlank()
+                || campaign.getClient() == null || campaign.getClient().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name y client son obligatorios");
+        }
+        if (campaign.getBudget() == null || campaign.getBudget() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "budget debe ser mayor a 0");
+        }
+        campaign.setSpent(0.0);
+        if (campaign.getStatus() == null || campaign.getStatus().isBlank()) {
+            campaign.setStatus("draft");
+        }
+        return repository.saveCampaign(campaign);
     }
 }
